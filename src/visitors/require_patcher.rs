@@ -5,7 +5,7 @@ use full_moon::{
     ShortString,
 };
 
-use crate::utils::{create_string, FunctionCallExt, ValueExt, create_ident};
+use crate::utils::{create_ident, create_string, FunctionCallExt, ValueExt};
 
 #[derive(Debug, Clone, Default)]
 pub struct RequirePatcher {
@@ -37,7 +37,9 @@ impl VisitorMut for RequirePatcher {
                 FunctionArgs::String(TokenReference::new(
                     vec![],
                     create_string(virtual_file_name.as_str()),
-                    vec![Token::new(TokenType::Whitespace { characters: ShortString::from("\n") })],
+                    vec![Token::new(TokenType::Whitespace {
+                        characters: ShortString::from("\n"),
+                    })],
                 )),
             ))]);
 

@@ -1,42 +1,20 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::bail;
-use log::debug;
+use anyhow::anyhow;
 
-#[derive(Debug, Clone, Default)]
-pub struct Resolver {
-    pattern: String,
-}
+const SUPPORTED_EXTENSIONS: [&str; 1] = ["lua"];
 
-impl Resolver {
-    pub fn new(pattern: String) -> Self {
-        Self { pattern }
-    }
+pub fn resolve<P: AsRef<Path>, S: AsRef<str>>(id: S, search_dir: P) -> anyhow::Result<PathBuf> {
+    let search_dir = search_dir.as_ref();
+    let id = id.as_ref();
 
-    fn compile_pattern(&self, virtual_file_name: &str) -> Vec<PathBuf> {
-        self.pattern
-            .split(";")
-            .map(|pattern| PathBuf::from(pattern.replace("?", virtual_file_name)))
-            .collect()
-    }
+    let mut search_paths = SUPPORTED_EXTENSIONS.iter().map(|ext| {
+        let mut path = search_dir.join(id);
+        path.set_extension(ext);
+        path
+    });
 
-    pub fn resolve<P: AsRef<Path>>(&self, virtual_file_name: &str, dir: P) -> anyhow::Result<PathBuf> {
-        let dir = dir.as_ref();
-        let patterns = self.compile_pattern(virtual_file_name);
-        let path = patterns
-            .into_iter()
-            .map(|pattern| dir.join(pattern))
-            .find(|pattern| pattern.exists());
-
-        match path {
-            Some(resolved) => {
-                debug!(
-                    "module \"{}\" resolved as {:?}",
-                    virtual_file_name, resolved
-                );
-                Ok(resolved)
-            }
-            None => bail!("{virtual_file_name} not found"),
-        }
-    }
+    search_paths
+        .find(|path| path.exists())
+        .ok_or(anyhow!("{} does not exist", id))
 }

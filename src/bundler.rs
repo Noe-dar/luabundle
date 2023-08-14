@@ -7,23 +7,10 @@ use std::{
 };
 
 use anyhow::bail;
-use full_moon::{
-    ast::Ast,
-    parse, print,
-    visitors::VisitorMut,
-    ShortString,
-};
-use petgraph::{
-    algo::is_cyclic_directed,
-    graph::NodeIndex,
-    visit::Bfs,
-    Graph,
-};
+use full_moon::{ast::Ast, parse, print, visitors::VisitorMut, ShortString};
+use petgraph::{algo::is_cyclic_directed, graph::NodeIndex, visit::Bfs, Graph};
 
-use crate::{
-    resolver::Resolver, utils::WriteExt,
-    visitors::require_patcher::RequirePatcher,
-};
+use crate::{resolver::resolve, utils::WriteExt, visitors::require_patcher::RequirePatcher};
 
 #[derive(Clone)]
 pub struct Module {
@@ -50,16 +37,14 @@ pub struct Bundler<W: Write> {
     bundle: BufWriter<W>,
     dependency_graph: Graph<Module, ()>,
     cache: HashMap<String, NodeIndex>,
-    resolver: Resolver,
 }
 
 impl<W: Write> Bundler<W> {
-    pub fn new(bundle: W, resolver: Resolver) -> Self {
+    pub fn new(bundle: W) -> Self {
         Self {
             bundle: BufWriter::new(bundle),
             dependency_graph: Graph::default(),
             cache: HashMap::new(),
-            resolver,
         }
     }
 
@@ -106,7 +91,7 @@ impl<W: Write> Bundler<W> {
         self.cache.insert(virtual_file_name.to_string(), node);
 
         for require in require_patcher.requires {
-            let resolved_path = self.resolver.resolve(require.as_str(), base_path)?;
+            let resolved_path = resolve(require.as_str(), base_path)?;
 
             let module_node = self.bundle_module(resolved_path, require)?;
 
@@ -130,7 +115,9 @@ impl<W: Write> Bundler<W> {
         let mut bfs = Bfs::new(&self.dependency_graph, root);
 
         while let Some(node_index) = bfs.next(&self.dependency_graph) {
-            if node_index == root { continue; }
+            if node_index == root {
+                continue;
+            }
             let module = (&self.dependency_graph[node_index]).to_owned();
 
             self.append_module(&module.virtual_file_name, module.ast.clone())?;
