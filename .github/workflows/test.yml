@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+        - uses: actions/checkout@v3
+
+        - name: Install Rust
+          uses: actions-rs/toolchain@v1
+          with:
+            toolchain: stable
+            override: true
+            profile: minimal
+            components: rustfmt, clippy
+        
+        - name: Verify code style
+          run: cargo fmt -- --check
+        
+        - name: Run cargo check
+          run: cargo check
+        
+        - name: Run cargo clippy
+          run: cargo clippy
+        
+        - name: Run tests
+          run: cargo test
+            
+
