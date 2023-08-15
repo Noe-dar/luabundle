@@ -22,7 +22,8 @@ jobs:
               shell: bash
 
               run: |
-                if [ ! $(git tag -l ${{ inputs.release_tag }})) ]; then
+                git fetch --tags
+                if [ ! $(git tag -l ${{ inputs.release_tag }}) ]; then
                   git tag ${{ inputs.release_tag }}
                   git push origin ${{ inputs.release_tag }}
                 fi
@@ -35,6 +36,7 @@ jobs:
               with:
                 tag_name: ${{ inputs.release_tag }}
                 name: ${{ inputs.release_tag }}
+                body: Release ${{ inputs.release_tag}}
                 draft: false
     release:
         needs: create-release
@@ -71,14 +73,14 @@ jobs:
               run: |
                 cd target/release
                 if [ "${{ matrix.os }}" = "windows-latest" ]; then
-                    7z a "../luabundle-${{ matrix.target }}" luabundle.exe
+                    7z a "../../luabundle-${{ matrix.target }}.zip" luabundle.exe
                 else
-                    zip "../luabundle-${{ matrix.target }}" luabundle
+                    zip "../../luabundle-${{ matrix.target }}.zip" luabundle
                 fi
             
             - name: Upload binary to release
               uses: actions/upload-release-asset@v1
-
+              
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               
