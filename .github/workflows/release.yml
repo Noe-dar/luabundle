@@ -22,9 +22,10 @@ jobs:
               shell: bash
 
               run: |
-                git tag ${{ inputs.release_tag }}
-                git push origin ${{ inputs.release_tag }}
-
+                if [ !${git tag -l ${{ inputs.release_tag }})} ]; then
+                  git tag ${{ inputs.release_tag }}
+                  git push origin ${{ inputs.release_tag }}
+                fi
             - name: Create release
               id: create_release_step
 
