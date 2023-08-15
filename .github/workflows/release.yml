@@ -76,10 +76,11 @@ jobs:
                 else
                     zip "../luabundle-${{ matrix.target }}.zip" luabundle
                 fi
+                cd ..
             
             - name: Upload binary to release
               uses: actions/upload-release-asset@v1
-
+              
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               
