@@ -1,0 +1,88 @@
+name: Release
+
+on:
+    workflow_dispatch:
+        inputs:
+            release_tag:
+                required: true
+                type: string
+
+jobs:
+    create-release:
+        name: Create release
+        runs-on: ubuntu-latest
+
+        outputs:
+            upload_url: ${{ steps.create_release_step.outputs.upload_url }}
+
+        steps:
+            - uses: actions/checkout@v3
+            
+            - name: Create tag
+              shell: bash
+
+              run: |
+                git tag ${{ inputs.release_tag }}
+                git push origin ${{ inputs.release_tag }}
+
+            - name: Create release
+              id: create_release_step
+
+              uses: softprops/action-gh-release@v1
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                tag_name: ${{ inputs.release_tag }}
+                name: ${{ inputs.release_tag }}
+                draft: false
+    release:
+        needs: create-release
+
+        strategy:
+            matrix:
+                include:
+                    - os: ubuntu-latest
+                      target: x86_64-unknown-linux-gnu
+                    - os: windows-latest
+                      target: x86_64-pc-windows-msvc
+                    - os: macos-latest
+                      target: x86_64-apple-darwin
+
+        runs-on: "${{matrix.os}}"
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Install Rust toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                profile: minimal
+                toolchain: stable
+            
+            - name: Build project
+              uses: actions-rs/cargo@v1
+              with:
+                command: build
+                args: --release
+            
+            - name: Create a binary archive 
+              shell: bash
+
+              run: |
+                cd target/release
+                if [ "${{ matrix.os }}" = "windows-latest" ]; then
+                    7z a "../luabundle-${{ matrix.target }}" luabundle.exe
+                else
+                    zip "../luabundle-${{ matrix.target }}" luabundle
+                fi
+            
+            - name: Upload binary to release
+              uses: actions/upload-release-asset@v1
+
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              
+              with:
+                upload_url: ${{ needs.create-release.outputs.upload_url }}
+                asset_path: luabundle-${{ matrix.target }}.zip
+                asset_name: luabundle-${{ matrix.target }}.zip
+                asset_content_type: application/zip
