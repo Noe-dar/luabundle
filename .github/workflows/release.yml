@@ -22,7 +22,7 @@ jobs:
               shell: bash
 
               run: |
-                if [ ! $(git tag -l ${{ inputs.release_tag }})) ]; then
+                if [ ! $(git tag -l ${{ inputs.release_tag }}) ]; then
                   git tag ${{ inputs.release_tag }}
                   git push origin ${{ inputs.release_tag }}
                 fi
