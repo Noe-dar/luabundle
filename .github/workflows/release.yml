@@ -36,6 +36,7 @@ jobs:
               with:
                 tag_name: ${{ inputs.release_tag }}
                 name: ${{ inputs.release_tag }}
+                body: Release ${{ inputs.release_tag}}
                 draft: false
     release:
         needs: create-release
