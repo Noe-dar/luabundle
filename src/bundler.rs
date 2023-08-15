@@ -118,7 +118,7 @@ impl<W: Write> Bundler<W> {
             if node_index == root {
                 continue;
             }
-            let module = (&self.dependency_graph[node_index]).to_owned();
+            let module = self.dependency_graph[node_index].to_owned();
 
             self.append_module(&module.virtual_file_name, module.ast.clone())?;
         }

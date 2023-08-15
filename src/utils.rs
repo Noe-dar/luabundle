@@ -33,19 +33,19 @@ impl<W: Write> WriteExt for W {}
 
 pub trait FunctionCallExt {
     fn name(&self) -> Option<ShortString>;
-    fn arg(&self, n: usize) -> Option<Box<Value>>;
+    fn arg(&self, n: usize) -> Option<Value>;
 }
 
 impl FunctionCallExt for FunctionCall {
-    fn arg(&self, n: usize) -> Option<Box<Value>> {
+    fn arg(&self, n: usize) -> Option<Value> {
         if let Some(Suffix::Call(Call::AnonymousCall(anonymous_call))) = self.suffixes().next() {
             match anonymous_call {
                 FunctionArgs::Parentheses { arguments, .. } => {
                     let argument = arguments.iter().nth(n);
                     let argument = argument.and_then(|value| value.as_value());
-                    argument.and_then(|value| Some(value.to_owned()))
+                    argument.map(|value| value.to_owned())
                 }
-                FunctionArgs::String(string) => Some(Box::new(Value::String(string.to_owned()))),
+                FunctionArgs::String(string) => Some(Value::String(string.to_owned())),
                 _ => None,
             }
         } else {
@@ -62,11 +62,11 @@ impl FunctionCallExt for FunctionCall {
 }
 
 pub trait ExpressionExt {
-    fn as_value(&self) -> Option<&Box<Value>>;
+    fn as_value(&self) -> Option<&Value>;
 }
 
 impl ExpressionExt for Expression {
-    fn as_value(&self) -> Option<&Box<Value>> {
+    fn as_value(&self) -> Option<&Value> {
         match self {
             Expression::Value { value } => Some(value),
             _ => None,
