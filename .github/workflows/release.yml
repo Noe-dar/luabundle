@@ -72,11 +72,10 @@ jobs:
               run: |
                 cd target/release
                 if [ "${{ matrix.os }}" = "windows-latest" ]; then
-                    7z a "../luabundle-${{ matrix.target }}.zip" luabundle.exe
+                    7z a "../../luabundle-${{ matrix.target }}.zip" luabundle.exe
                 else
-                    zip "../luabundle-${{ matrix.target }}.zip" luabundle
+                    zip "../../luabundle-${{ matrix.target }}.zip" luabundle
                 fi
-                cd ..
             
             - name: Upload binary to release
               uses: actions/upload-release-asset@v1
