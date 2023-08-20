@@ -39,7 +39,7 @@ mod tests {
         let tempdir = create_tempdir()?;
 
         let base_path = tempdir.path();
-        
+
         let expected_path = base_path.join("test.lua");
         File::create(&expected_path)?;
 
